@@ -1,0 +1,73 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id       Int     @id @default(autoincrement())
+  email    String  @unique
+  password String
+  name     String?
+  role     String  @default("USER")
+  courses  Course[] @relation("UserCourses")
+}
+
+model Course {
+  id           Int      @id @default(autoincrement())
+  title        String
+  slug         String   @unique
+  description  String?
+  instructor   User     @relation("UserCourses", fields: [instructorId], references: [id])
+  instructorId Int
+  lessons      Lesson[]
+  ebooks       Ebook[]
+}
+
+model Lesson {
+  id       Int    @id @default(autoincrement())
+  title    String
+  videoUrl String
+  course   Course @relation(fields: [courseId], references: [id])
+  courseId Int
+  order    Int
+}
+
+model Ebook {
+  id       Int    @id @default(autoincrement())
+  title    String
+  fileUrl  String
+  course   Course @relation(fields: [courseId], references: [id])
+  courseId Int
+}
+
+model Activity {
+  id        Int    @id @default(autoincrement())
+  type      String
+  payload   Json
+  lesson    Lesson @relation(fields: [lessonId], references: [id])
+  lessonId  Int
+}
+
+model Enrollment {
+  user       User     @relation(fields: [userId], references: [id])
+  userId     Int
+  course     Course   @relation(fields: [courseId], references: [id])
+  courseId   Int
+  enrolledAt DateTime @default(now())
+
+  @@id([userId, courseId])
+}
+
+model Submission {
+  id         Int      @id @default(autoincrement())
+  answer     String
+  grade      Int?
+  activity   Activity @relation(fields: [activityId], references: [id])
+  activityId Int
+  user       User     @relation(fields: [userId], references: [id])
+  userId     Int
+}
